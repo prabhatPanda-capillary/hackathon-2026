@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hackathon Submission Template — Implementation Team</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #0d0d0d;
+    --paper: #f5f2eb;
+    --accent: #6c3bff;
+    --accent-light: #e8e1ff;
+    --accent-mid: #a98eff;
+    --warm: #ff6b35;
+    --muted: #6b6760;
+    --border: rgba(13,13,13,0.12);
+    --card: #ffffff;
+    --success: #2d7a4f;
+    --success-bg: #e8f5ed;
+  }
+
+  body {
+    background-color: var(--paper);
+    color: var(--ink);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.6;
+  }
+
+  .page { position: relative; z-index: 1; max-width: 860px; margin: 0 auto; padding: 0 2rem 4rem; }
+
+  /* ---- HEADER ---- */
+  .form-header {
+    padding: 2.5rem 0 2rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 2.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .header-left .breadcrumb {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    margin-bottom: 0.4rem;
+  }
+
+  .header-left h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 2rem;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+
+  .header-deadline {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
+
+  .deadline-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .deadline-date {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1.4rem;
+    color: var(--warm);
+    letter-spacing: -0.02em;
+  }
+
+  /* ---- PROGRESS ---- */
+  .progress-bar-wrap {
+    background: var(--border);
+    height: 3px;
+    border-radius: 99px;
+    margin-bottom: 2.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--accent);
+    border-radius: 99px;
+    transition: width 0.4s ease;
+  }
+
+  .progress-label {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* ---- SECTION CARD ---- */
+  .form-section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    margin-bottom: 1.25rem;
+    overflow: hidden;
+  }
+
+  .form-section-header {
+    padding: 1.25rem 1.75rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--paper);
+  }
+
+  .section-num {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .section-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+
+  .section-tag {
+    margin-left: auto;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 100px;
+  }
+
+  .required-tag { background: #fff0ea; color: var(--warm); }
+  .optional-tag { background: var(--accent-light); color: var(--accent); }
+
+  .form-section-body { padding: 1.75rem; }
+
+  /* ---- FIELDS ---- */
+  .field-group {
+    margin-bottom: 1.5rem;
+  }
+
+  .field-group:last-child { margin-bottom: 0; }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  @media (max-width: 600px) { .field-row { grid-template-columns: 1fr; } }
+
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 6px;
+    letter-spacing: 0.01em;
+  }
+
+  .field-hint {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 8px;
+    line-height: 1.5;
+    font-weight: 300;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="url"],
+  select,
+  textarea {
+    width: 100%;
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 300;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(108,59,255,0.1);
+  }
+
+  textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
+
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b6760' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+    cursor: pointer;
+  }
+
+  /* ---- CHAR COUNTER ---- */
+  .field-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 5px;
+  }
+
+  .char-count {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* ---- TOOLS CHECKBOX ---- */
+  .tools-check-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .tool-check-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    cursor: pointer;
+    font-size: 13.5px;
+    font-weight: 400;
+    transition: border-color 0.15s, background 0.15s;
+    user-select: none;
+  }
+
+  .tool-check-label:hover { border-color: var(--accent-mid); }
+  .tool-check-label.checked { background: var(--accent-light); border-color: var(--accent-mid); color: var(--accent); }
+
+  .tool-check-label input[type="checkbox"] { display: none; }
+
+  .check-icon { width: 16px; height: 16px; border: 1.5px solid var(--border); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; transition: all 0.15s; flex-shrink: 0; }
+
+  .tool-check-label.checked .check-icon {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+
+  /* ---- IMPACT SLIDER ---- */
+  .impact-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .impact-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  input[type="range"] {
+    width: 100%;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+
+  .impact-val {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: var(--accent);
+    text-align: center;
+  }
+
+  /* ---- OPTIONAL LINKS ---- */
+  .link-input-wrap {
+    position: relative;
+  }
+
+  .link-prefix {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 13px;
+    color: var(--muted);
+    pointer-events: none;
+  }
+
+  .link-input-wrap input { padding-left: 30px; }
+
+  /* ---- SUBMIT AREA ---- */
+  .submit-section {
+    background: var(--ink);
+    border-radius: 16px;
+    padding: 2rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-top: 1.25rem;
+  }
+
+  .submit-left p {
+    font-size: 13px;
+    color: rgba(245,242,235,0.6);
+    max-width: 380px;
+    line-height: 1.6;
+  }
+
+  .submit-left strong {
+    display: block;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--paper);
+    margin-bottom: 4px;
+  }
+
+  .submit-btn {
+    background: var(--accent);
+    color: #fff;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 14px 32px;
+    border-radius: 100px;
+    border: none;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: background 0.2s, transform 0.15s;
+    white-space: nowrap;
+  }
+
+  .submit-btn:hover { background: #5a2ee0; transform: translateY(-1px); }
+  .submit-btn:disabled { background: var(--muted); cursor: not-allowed; transform: none; }
+
+  /* ---- SUCCESS ---- */
+  .success-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(245,242,235,0.96);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+    padding: 2rem;
+  }
+
+  .success-overlay.show { display: flex; animation: fadeIn 0.3s ease; }
+
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .success-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: var(--success-bg);
+    color: var(--success);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    margin-bottom: 1.5rem;
+  }
+
+  .success-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 2rem;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.75rem;
+  }
+
+  .success-sub {
+    font-size: 1rem;
+    color: var(--muted);
+    max-width: 380px;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+  }
+
+  .success-pill {
+    background: var(--ink);
+    color: var(--paper);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 10px 24px;
+    border-radius: 100px;
+    border: none;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<!-- SUCCESS OVERLAY -->
+<div class="success-overlay" id="successOverlay">
+  <div class="success-icon">✓</div>
+  <div class="success-title">Submission received!</div>
+  <div class="success-sub">Your project has been submitted for the AI Hackathon. You'll hear from us ahead of demo week (June 2–6). Good luck!</div>
+  <button class="success-pill" onclick="document.getElementById('successOverlay').classList.remove('show')">Back to form</button>
+</div>
+
+<div class="page">
+
+  <div class="form-header">
+    <div class="header-left">
+      <div class="breadcrumb">Implementation Team · AI Hackathon 2025</div>
+      <h1>Project Submission</h1>
+    </div>
+    <div class="header-deadline">
+      <div class="deadline-label">Deadline</div>
+      <div class="deadline-date">June 1, 2025</div>
+    </div>
+  </div>
+
+  <div class="progress-label">
+    <span id="progressText">0 of 8 sections complete</span>
+    <span id="progressPct">0%</span>
+  </div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" id="progressBar"></div>
+  </div>
+
+  <form id="hackForm" onsubmit="handleSubmit(event)" novalidate>
+
+    <!-- SECTION 1 — TEAM INFO -->
+    <div class="form-section">
+      <div class="form-section-header">
+        <div class="section-num">1</div>
+        <div class="section-name">Team information</div>
+        <div class="section-tag required-tag">Required</div>
+      </div>
+      <div class="form-section-body">
+        <div class="field-row">
+          <div class="field-group">
+            <label for="projectName">Project name *</label>
+            <div class="field-hint">Give your project a memorable name.</div>
+            <input type="text" id="projectName" placeholder="e.g. AutoOnboard AI" required oninput="updateProgress()">
+          </div>
+          <div class="field-group">
+            <label for="submitterName">Your name *</label>
+            <div class="field-hint">Primary submitter / team lead.</div>
+            <input type="text" id="submitterName" placeholder="Full name" required oninput="updateProgress()">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field-group">
+            <label for="email">Email address *</label>
+            <input type="email" id="email" placeholder="you@company.com" required oninput="updateProgress()">
+          </div>
+          <div class="field-group">
+            <label for="partner">Partner name (if pair)</label>
+            <div class="field-hint">Leave blank if solo.</div>
+            <input type="text" id="partner" placeholder="Teammate's full name">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 2 — TOOLS USED -->
+    <div class="form-section">
+      <div class="form-section-header">
+        <div class="section-num">2</div>
+        <div class="section-name">AI tools used</div>
+        <div class="section-tag required-tag">Required</div>
+      </div>
+      <div class="form-section-body">
+        <div class="field-group">
+          <label>Select all tools used in your project *</label>
+          <div class="field-hint">At least one required.</div>
+          <div class="tools-check-row" id="toolsRow">
+            <label class="tool-check-label" onclick="toggleTool(this)">
+              <input type="checkbox" name="tools" value="claude">
+              <div class="check-icon"></div>
+              Claude
+            </label>
+            <label class="tool-check-label" onclick="toggleTool(this)">
+              <input type="checkbox" name="tools" value="claude-code">
+              <div class="check-icon"></div>
+              Claude Code
+            </label>
+            <label class="tool-check-label" onclick="toggleTool(this)">
+              <input type="checkbox" name="tools" value="gemini">
+              <div class="check-icon"></div>
+              Gemini
+            </label>
+            <label class="tool-check-label" onclick="toggleTool(this)">
+              <input type="checkbox" name="tools" value="other">
+              <div class="check-icon"></div>
+              Other AI tool
+            </label>
+          </div>
+        </div>
+        <div class="field-group" id="otherToolWrap" style="display:none;">
+          <label for="otherTool">Specify other tool(s)</label>
+          <input type="text" id="otherTool" placeholder="Tool name and brief reason for use">
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 3 — CATEGORY -->
+    <div class="form-section">
+      <div class="form-section-header">
+        <div class="section-num">3</div>
+        <div class="section-name">Project category</div>
+        <div class="section-tag required-tag">Required</div>
+      </div>
+      <div class="form-section-body">
+        <div class="field-group">
+          <label for="category">Best describes your project *</label>
+          <select id="category" required onchange="updateProgress()">
+            <option value="" disabled selected>Select a category</option>
+            <option>Process automation</option>
+            <option>Custom AI skill / prompt</option>
+            <option>AI-powered application</option>
+            <option>Workflow redesign</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 4 — PROBLEM -->
+    <div class="form-section">
+      <div class="form-section-header">
+        <div class="section-num">4</div>
+        <div class="section-name">Problem statement</div>
+        <div class="section-tag required-tag">Required</div>
+      </div>
+      <div class="form-section-body">
+        <div class="field-group">
+          <label for="problem">What problem does your project solve? *</label>
+          <div class="field-hint">Describe the current pain point in the implementation workflow. Be specific — what's slow, manual, or error-prone?</div>
+          <textarea id="problem" placeholder="e.g. Onboarding checklist creation is currently done manually by each PM, taking 30–45 minutes per client and often missing steps…" maxlength="600" required oninput="countChars(this,'problemCount'); updateProgress()"></textarea>
+          <div class="field-footer"><span class="char-count" id="problemCount">0 / 600</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 5 — SOLUTION -->
+    <div class="form-section">
+      <div class="form-section-header">
+        <div class="section-num">5</div>
+        <div class="section-name">Your solution</div>
+        <div class="section-tag required-tag">Required</div>
+      </div>
+      <div class="form-section-body">
+        <div class="field-group">
+          <label for="solution">Describe your solution *</label>
+          <div class="field-hint">How does your project work? What did you build, and how does AI power it? Walk us through the key steps.</div>
+          <textarea id="solution" placeholder="e.g. We built a Claude-powered script that reads the client's CRM data and auto-generates a tailored onboarding checklist in under 10 seconds…" rows="6" maxlength="1000" required oninput="countChars(this,'solutionCount'); updateProgress()"></textarea>
+          <div class="field-footer"><span class="char-count" id="solutionCount">0 / 1000</span></div>
+        </div>
+        <div class="field-group">
+          <label for="howItWorks">How to run / use it</label>
+          <div class="field-hint">Step-by-step instructions so a teammate could pick this up and use it today.</div>
+          <textarea id="howItWorks" placeholder="1. Open the script…&#10;2. Paste the client name…&#10;3. Hit run — the checklist appears in your clipboard." rows="4" maxlength="600" oninput="countChars(this,'howCount')"></textarea>
+          <div class="field-footer"><span class="char-count" id="howCount">0 / 600</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 6 — IMPACT -->
+    <div class="form-section">
+      <div class="form-section-header">
+        <div class="section-num">6</div>
+        <div class="section-name">Impact &amp; results</div>
+        <div class="section-tag required-tag">Required</div>
+      </div>
+      <div class="form-section-body">
+        <div class="field-group">
+          <label for="impact">What impact does this create? *</label>
+          <div class="field-hint">Include numbers where possible — time saved, errors reduced, steps eliminated.</div>
+          <textarea id="impact" placeholder="e.g. Reduces checklist creation time from 40 minutes to under 1 minute. Eliminates 3 common missed steps. Tested on 5 real client onboardings." maxlength="500" required oninput="countChars(this,'impactCount'); updateProgress()"></textarea>
+          <div class="field-footer"><span class="char-count" id="impactCount">0 / 500</span></div>
+        </div>
+        <div class="field-group">
+          <label for="impactSlider">Self-assessed impact score</label>
+          <div class="field-hint">How significant is the impact on the team's daily work?</div>
+          <div class="impact-row">
+            <input type="range" id="impactSlider" min="1" max="10" value="5" oninput="updateSlider(this)">
+            <div class="impact-val" id="sliderVal">5 / 10</div>
+            <div class="impact-labels">
+              <span>Nice to have</span>
+              <span>Game changer</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 7 — LINKS (OPTIONAL) -->
+    <div class="form-section">
+      <div class="form-section-header">
+        <div class="section-num">7</div>
+        <div class="section-name">Links &amp; resources</div>
+        <div class="section-tag optional-tag">Optional</div>
+      </div>
+      <div class="form-section-body">
+        <div class="field-row">
+          <div class="field-group">
+            <label for="repoLink">Code repository / doc link</label>
+            <div class="link-input-wrap">
+              <span class="link-prefix">🔗</span>
+              <input type="url" id="repoLink" placeholder="https://github.com/..." style="padding-left: 30px;">
+            </div>
+          </div>
+          <div class="field-group">
+            <label for="videoLink">Demo video link</label>
+            <div class="link-input-wrap">
+              <span class="link-prefix">▶</span>
+              <input type="url" id="videoLink" placeholder="https://loom.com/..." style="padding-left: 30px;">
+            </div>
+          </div>
+        </div>
+        <div class="field-group">
+          <label for="screenshotNote">Screenshots / attachments note</label>
+          <div class="field-hint">Paste any screenshot links or describe what you'd like to show during the live demo.</div>
+          <textarea id="screenshotNote" placeholder="Screenshot of output: [link]&#10;Demo walkthrough recording: [link]" rows="3" maxlength="400" oninput="countChars(this,'screenshotCount')"></textarea>
+          <div class="field-footer"><span class="char-count" id="screenshotCount">0 / 400</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 8 — ANYTHING ELSE -->
+    <div class="form-section">
+      <div class="form-section-header">
+        <div class="section-num">8</div>
+        <div class="section-name">Anything else?</div>
+        <div class="section-tag optional-tag">Optional</div>
+      </div>
+      <div class="form-section-body">
+        <div class="field-group">
+          <label for="extra">Additional context, known limitations, or next steps</label>
+          <div class="field-hint">Anything you want the judges to know that didn't fit above.</div>
+          <textarea id="extra" placeholder="e.g. Currently works for standard onboarding flows only — enterprise edge cases are on our list. Next step is integrating it directly into Jira…" rows="4" maxlength="600" oninput="countChars(this,'extraCount')"></textarea>
+          <div class="field-footer"><span class="char-count" id="extraCount">0 / 600</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUBMIT -->
+    <div class="submit-section">
+      <div class="submit-left">
+        <strong>Ready to submit?</strong>
+        <p>Make sure all required fields are complete. Deadline is <strong style="color: var(--warm);">June 1, 2025 at 11:59 PM</strong>. You can re-submit before the deadline to update your entry.</p>
+      </div>
+      <button type="submit" class="submit-btn" id="submitBtn">Submit project →</button>
+    </div>
+
+  </form>
+
+</div>
+
+<script>
+  function toggleTool(label) {
+    setTimeout(() => {
+      const cb = label.querySelector('input[type="checkbox"]');
+      if (cb.checked) {
+        label.classList.add('checked');
+        label.querySelector('.check-icon').textContent = '✓';
+      } else {
+        label.classList.remove('checked');
+        label.querySelector('.check-icon').textContent = '';
+      }
+      const otherChecked = document.querySelector('input[value="other"]').checked;
+      document.getElementById('otherToolWrap').style.display = otherChecked ? 'block' : 'none';
+      updateProgress();
+    }, 0);
+  }
+
+  function countChars(el, counterId) {
+    const max = el.getAttribute('maxlength');
+    document.getElementById(counterId).textContent = el.value.length + ' / ' + max;
+  }
+
+  function updateSlider(el) {
+    document.getElementById('sliderVal').textContent = el.value + ' / 10';
+  }
+
+  function updateProgress() {
+    const fields = [
+      document.getElementById('projectName').value.trim(),
+      document.getElementById('submitterName').value.trim(),
+      document.getElementById('email').value.trim(),
+      Array.from(document.querySelectorAll('input[name="tools"]:checked')).length > 0 ? 'ok' : '',
+      document.getElementById('category').value,
+      document.getElementById('problem').value.trim(),
+      document.getElementById('solution').value.trim(),
+      document.getElementById('impact').value.trim(),
+    ];
+    const filled = fields.filter(Boolean).length;
+    const pct = Math.round((filled / 8) * 100);
+    document.getElementById('progressBar').style.width = pct + '%';
+    document.getElementById('progressPct').textContent = pct + '%';
+    document.getElementById('progressText').textContent = filled + ' of 8 sections complete';
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    const required = ['projectName','submitterName','email','category','problem','solution','impact'];
+    let valid = true;
+    required.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el.value.trim()) { el.style.borderColor = '#e24b4a'; valid = false; }
+      else el.style.borderColor = '';
+    });
+    const tools = document.querySelectorAll('input[name="tools"]:checked');
+    if (tools.length === 0) { valid = false; }
+    if (!valid) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    document.getElementById('successOverlay').classList.add('show');
+  }
+
+  updateProgress();
+</script>
+</body>
+</html>

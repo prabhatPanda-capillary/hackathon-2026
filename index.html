@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Hackathon — Implementation Team</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #0d0d0d;
+    --paper: #f5f2eb;
+    --accent: #6c3bff;
+    --accent-light: #e8e1ff;
+    --accent-mid: #a98eff;
+    --warm: #ff6b35;
+    --warm-light: #fff0ea;
+    --muted: #6b6760;
+    --border: rgba(13,13,13,0.12);
+    --card: #ffffff;
+  }
+
+  html { font-size: 16px; }
+
+  body {
+    background-color: var(--paper);
+    color: var(--ink);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ---- NOISE TEXTURE OVERLAY ---- */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.6;
+  }
+
+  .page { position: relative; z-index: 1; }
+
+  /* ---- HERO ---- */
+  .hero {
+    min-height: 100vh;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    padding: 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-bg-shape {
+    position: absolute;
+    top: -120px;
+    right: -100px;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--accent-light) 0%, transparent 70%);
+    opacity: 0.7;
+    pointer-events: none;
+  }
+
+  .hero-bg-shape2 {
+    position: absolute;
+    bottom: -80px;
+    left: -60px;
+    width: 400px;
+    height: 400px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--warm-light) 0%, transparent 70%);
+    opacity: 0.8;
+    pointer-events: none;
+  }
+
+  .hero-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2rem 3rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 15px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+
+  .nav-badge {
+    background: var(--ink);
+    color: var(--paper);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: 100px;
+  }
+
+  .hero-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 4rem 3rem;
+    position: relative;
+  }
+
+  .hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 1.5rem;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  .eyebrow-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 2s ease infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.7); }
+  }
+
+  .hero-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(3.5rem, 8vw, 7rem);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+    margin-bottom: 1.5rem;
+    animation: fadeUp 0.6s 0.1s ease both;
+  }
+
+  .hero-title .accent-word {
+    color: var(--accent);
+    display: block;
+  }
+
+  .hero-title .warm-word {
+    color: var(--warm);
+    display: block;
+  }
+
+  .hero-desc {
+    max-width: 580px;
+    font-size: 1.15rem;
+    color: var(--muted);
+    line-height: 1.7;
+    margin-bottom: 2.5rem;
+    animation: fadeUp 0.6s 0.2s ease both;
+  }
+
+  .hero-cta-row {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    animation: fadeUp 0.6s 0.3s ease both;
+  }
+
+  .btn-primary {
+    background: var(--ink);
+    color: var(--paper);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 14px 28px;
+    border-radius: 100px;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: background 0.2s, transform 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-primary:hover { background: var(--accent); transform: translateY(-1px); }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--ink);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    padding: 13px 28px;
+    border-radius: 100px;
+    border: 1px solid var(--border);
+    text-decoration: none;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .btn-outline:hover { border-color: var(--ink); background: rgba(13,13,13,0.04); }
+
+  .hero-footer {
+    padding: 2rem 3rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 3rem;
+    flex-wrap: wrap;
+  }
+
+  .hero-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .stat-val {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1.6rem;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+  }
+
+  .stat-lbl {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ---- SECTION BASE ---- */
+  section {
+    padding: 5rem 3rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.6rem;
+  }
+
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: clamp(1.8rem, 3vw, 2.8rem);
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    margin-bottom: 1rem;
+    color: var(--ink);
+  }
+
+  .section-sub {
+    font-size: 1.05rem;
+    color: var(--muted);
+    max-width: 560px;
+    line-height: 1.7;
+    margin-bottom: 3rem;
+  }
+
+  /* ---- TIMELINE ---- */
+  .timeline-track {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    background: var(--card);
+  }
+
+  .tl-step {
+    padding: 2rem 1.75rem;
+    border-right: 1px solid var(--border);
+    position: relative;
+  }
+
+  .tl-step:last-child { border-right: none; }
+
+  .tl-step.highlight {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  .tl-num {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 3rem;
+    line-height: 1;
+    color: var(--border);
+    margin-bottom: 1.25rem;
+  }
+
+  .tl-step.highlight .tl-num { color: rgba(255,255,255,0.15); }
+
+  .tl-date {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: var(--accent-light);
+    color: var(--accent);
+    padding: 3px 10px;
+    border-radius: 100px;
+    margin-bottom: 0.75rem;
+  }
+
+  .tl-step.highlight .tl-date {
+    background: rgba(255,255,255,0.15);
+    color: var(--paper);
+  }
+
+  .tl-event {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: -0.01em;
+    margin-bottom: 0.4rem;
+  }
+
+  .tl-desc {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .tl-step.highlight .tl-desc { color: rgba(245,242,235,0.65); }
+
+  /* ---- WHAT TO BUILD ---- */
+  .build-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+  }
+
+  .build-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.75rem;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+
+  .build-card:hover { border-color: var(--accent-mid); transform: translateY(-2px); }
+
+  .build-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: var(--accent-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    font-size: 20px;
+  }
+
+  .build-card-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1.05rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .build-card-body {
+    font-size: 13.5px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  /* ---- AI TOOLS ---- */
+  .tools-section { background: var(--ink); color: var(--paper); }
+
+  .tools-section .section-title { color: var(--paper); }
+  .tools-section .section-label { color: rgba(245,242,235,0.4); }
+  .tools-section .section-sub { color: rgba(245,242,235,0.6); }
+
+  .tools-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+
+  .tool-card {
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 16px;
+    padding: 1.75rem;
+    transition: border-color 0.2s;
+  }
+
+  .tool-card:hover { border-color: rgba(255,255,255,0.35); }
+
+  .tool-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 100px;
+    margin-bottom: 1rem;
+  }
+
+  .tool-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+    color: var(--paper);
+  }
+
+  .tool-desc {
+    font-size: 13px;
+    color: rgba(245,242,235,0.55);
+    line-height: 1.6;
+  }
+
+  /* ---- JUDGING ---- */
+  .judging-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  @media (max-width: 600px) { .judging-grid { grid-template-columns: 1fr; } }
+
+  .judge-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.75rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1.25rem;
+  }
+
+  .judge-pct {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 2.4rem;
+    color: var(--accent);
+    line-height: 1;
+    min-width: 72px;
+    letter-spacing: -0.03em;
+  }
+
+  .judge-label {
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 4px;
+  }
+
+  .judge-sub {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* ---- REWARD ---- */
+  .reward-strip {
+    background: linear-gradient(135deg, var(--accent) 0%, #9b59ff 50%, var(--warm) 100%);
+    border-radius: 20px;
+    padding: 3rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .reward-left .reward-eyebrow {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.65);
+    margin-bottom: 0.5rem;
+  }
+
+  .reward-left .reward-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 2.2rem;
+    color: #fff;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+
+  .reward-left .reward-sub {
+    font-size: 15px;
+    color: rgba(255,255,255,0.7);
+    margin-top: 0.75rem;
+    max-width: 400px;
+    line-height: 1.6;
+  }
+
+  .reward-trophy {
+    font-size: 5rem;
+    opacity: 0.9;
+    filter: drop-shadow(0 4px 24px rgba(0,0,0,0.2));
+  }
+
+  /* ---- FAQ-STYLE ELIGIBILITY ---- */
+  .eligibility-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    background: var(--card);
+  }
+
+  .elig-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.25rem 1.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .elig-item:last-child { border-bottom: none; }
+
+  .elig-check {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #e8f5ed;
+    color: #2d7a4f;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+    margin-top: 2px;
+    font-weight: 500;
+  }
+
+  .elig-text {
+    font-size: 14.5px;
+    color: var(--ink);
+    line-height: 1.5;
+  }
+
+  /* ---- FOOTER ---- */
+  .footer {
+    padding: 3rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: gap;
+    gap: 1rem;
+  }
+
+  .footer-brand {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 14px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .footer-note {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  /* ---- RESPONSIVE ---- */
+  @media (max-width: 700px) {
+    .hero-nav, .hero-content, .hero-footer, section, .footer { padding-left: 1.5rem; padding-right: 1.5rem; }
+    .hero-footer { gap: 1.5rem; }
+    .timeline-track { grid-template-columns: 1fr; }
+    .tl-step { border-right: none; border-bottom: 1px solid var(--border); }
+    .tl-step:last-child { border-bottom: none; }
+    .reward-strip { padding: 2rem; }
+    .reward-trophy { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-bg-shape"></div>
+    <div class="hero-bg-shape2"></div>
+
+    <nav class="hero-nav">
+      <div class="nav-logo">Implementation Team</div>
+      <div class="nav-badge">Internal · 2025</div>
+    </nav>
+
+    <div class="hero-content">
+      <div class="hero-eyebrow">
+        <div class="eyebrow-dot"></div>
+        AI Hackathon · Kicks off May 11
+      </div>
+
+      <h1 class="hero-title">
+        Automate.
+        <span class="accent-word">Innovate.</span>
+        <span class="warm-word">Accelerate.</span>
+      </h1>
+
+      <p class="hero-desc">
+        An open challenge for the implementation team to harness the power of Claude, Claude Code, and Gemini — building tools, automations, and skills that make our work faster, smarter, and smoother.
+      </p>
+
+      <div class="hero-cta-row">
+        <a href="#submit" class="btn-primary">Submit your project →</a>
+        <a href="#timeline" class="btn-outline">View timeline</a>
+      </div>
+    </div>
+
+    <div class="hero-footer">
+      <div class="hero-stat">
+        <div class="stat-val">May 11</div>
+        <div class="stat-lbl">Kickoff date</div>
+      </div>
+      <div class="hero-stat">
+        <div class="stat-val">June 1</div>
+        <div class="stat-lbl">Submission deadline</div>
+      </div>
+      <div class="hero-stat">
+        <div class="stat-val">June 2–6</div>
+        <div class="stat-lbl">Demo week</div>
+      </div>
+      <div class="hero-stat">
+        <div class="stat-val">Rewards</div>
+        <div class="stat-lbl">For top performers</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TIMELINE -->
+  <section id="timeline">
+    <div class="section-label">Schedule</div>
+    <h2 class="section-title">Key dates</h2>
+    <p class="section-sub">Three weeks to build, one day to shine. Here's how the hackathon runs from start to finish.</p>
+
+    <div class="timeline-track">
+      <div class="tl-step">
+        <div class="tl-num">01</div>
+        <div class="tl-date">May 11</div>
+        <div class="tl-event">Kickoff</div>
+        <div class="tl-desc">Official launch. Teams form, ideas start flowing, AI tools unlocked.</div>
+      </div>
+      <div class="tl-step">
+        <div class="tl-num">02</div>
+        <div class="tl-date">May 11 – May 30</div>
+        <div class="tl-event">Build Phase</div>
+        <div class="tl-desc">~3 weeks to design, build, and iterate on your solution with AI.</div>
+      </div>
+      <div class="tl-step">
+        <div class="tl-num">03</div>
+        <div class="tl-date">June 1</div>
+        <div class="tl-event">Submission Deadline</div>
+        <div class="tl-desc">All projects submitted via the template. No late entries accepted.</div>
+      </div>
+      <div class="tl-step highlight">
+        <div class="tl-num">04</div>
+        <div class="tl-date">June 2 – 6</div>
+        <div class="tl-event">Demo Week 🎉</div>
+        <div class="tl-desc">Live demos to the team. Top solutions win recognition and rewards.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHAT TO BUILD -->
+  <section>
+    <div class="section-label">Challenge</div>
+    <h2 class="section-title">What to build</h2>
+    <p class="section-sub">Use AI to solve a real problem in our implementation workflow. Your project should save time, reduce friction, or unlock a capability we don't have today.</p>
+
+    <div class="build-grid">
+      <div class="build-card">
+        <div class="build-icon">⚡</div>
+        <div class="build-card-title">Process automation</div>
+        <div class="build-card-body">Identify a manual or repetitive implementation step and automate it end-to-end using AI.</div>
+      </div>
+      <div class="build-card">
+        <div class="build-icon">🧠</div>
+        <div class="build-card-title">Custom AI skills</div>
+        <div class="build-card-body">Build shareable Claude skills — specialized prompts, tools, or agents — your teammates can reuse daily.</div>
+      </div>
+      <div class="build-card">
+        <div class="build-icon">🛠️</div>
+        <div class="build-card-title">AI-powered applications</div>
+        <div class="build-card-body">Create a lightweight app or script that puts AI at the center of a key implementation task.</div>
+      </div>
+      <div class="build-card">
+        <div class="build-icon">🗺️</div>
+        <div class="build-card-title">Workflow redesign</div>
+        <div class="build-card-body">Redesign an existing workflow from scratch with AI as the operating layer, not just a helper.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AI TOOLS -->
+  <section class="tools-section">
+    <div class="section-label">Allowed tools</div>
+    <h2 class="section-title">Your AI arsenal</h2>
+    <p class="section-sub">Pick one or combine them all. The tools are powerful — what matters is what you build with them.</p>
+
+    <div class="tools-row">
+      <div class="tool-card">
+        <div class="tool-tag" style="background:rgba(108,59,255,0.2); color:#c4b0ff;">Anthropic</div>
+        <div class="tool-name">Claude</div>
+        <div class="tool-desc">Reason, write, plan, and automate complex multi-step tasks through natural language.</div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-tag" style="background:rgba(108,59,255,0.2); color:#c4b0ff;">Anthropic</div>
+        <div class="tool-name">Claude Code</div>
+        <div class="tool-desc">Agentic coding directly in your terminal. Build, debug, and ship faster with AI pair programming.</div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-tag" style="background:rgba(255,255,255,0.1); color:rgba(255,255,255,0.5);">Google</div>
+        <div class="tool-name">Gemini</div>
+        <div class="tool-desc">Google's multimodal AI — great for docs, spreadsheets, and Google Workspace workflows.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- JUDGING -->
+  <section>
+    <div class="section-label">Evaluation</div>
+    <h2 class="section-title">How projects are judged</h2>
+    <p class="section-sub">Judges will score each submission across four dimensions. Build something that's genuinely useful — that's the north star.</p>
+
+    <div class="judging-grid">
+      <div class="judge-card">
+        <div class="judge-pct">30%</div>
+        <div>
+          <div class="judge-label">Real-world impact</div>
+          <div class="judge-sub">Does it meaningfully improve implementation speed, quality, or consistency?</div>
+        </div>
+      </div>
+      <div class="judge-card">
+        <div class="judge-pct">25%</div>
+        <div>
+          <div class="judge-label">Creativity</div>
+          <div class="judge-sub">Is the problem framing original? Does the solution surprise us?</div>
+        </div>
+      </div>
+      <div class="judge-card">
+        <div class="judge-pct">25%</div>
+        <div>
+          <div class="judge-label">Execution quality</div>
+          <div class="judge-sub">Is the solution complete, reliable, and ready to use by the team?</div>
+        </div>
+      </div>
+      <div class="judge-card">
+        <div class="judge-pct">20%</div>
+        <div>
+          <div class="judge-label">Demo clarity</div>
+          <div class="judge-sub">Can the presenter communicate the value quickly and convincingly?</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ELIGIBILITY -->
+  <section>
+    <div class="section-label">Participation</div>
+    <h2 class="section-title">Who can participate</h2>
+    <p class="section-sub">This hackathon is open to everyone on the implementation team. Solo or in pairs — your call.</p>
+
+    <ul class="eligibility-list">
+      <li class="elig-item">
+        <div class="elig-check">✓</div>
+        <div class="elig-text">Open to all members of the implementation team — no prior AI experience required.</div>
+      </li>
+      <li class="elig-item">
+        <div class="elig-check">✓</div>
+        <div class="elig-text">Participate solo or as a pair. Teams of more than 2 are not eligible for individual rewards.</div>
+      </li>
+      <li class="elig-item">
+        <div class="elig-check">✓</div>
+        <div class="elig-text">Projects must use at least one of the approved AI tools: Claude, Claude Code, or Gemini.</div>
+      </li>
+      <li class="elig-item">
+        <div class="elig-check">✓</div>
+        <div class="elig-text">The project must address a real implementation workflow challenge — no toy demos.</div>
+      </li>
+      <li class="elig-item">
+        <div class="elig-check">✓</div>
+        <div class="elig-text">Submission must be received by 11:59 PM on June 1, 2025 to be eligible for rewards.</div>
+      </li>
+    </ul>
+  </section>
+
+  <!-- REWARD -->
+  <section style="border-top: none; padding-top: 0;">
+    <div class="reward-strip">
+      <div class="reward-left">
+        <div class="reward-eyebrow">Recognition &amp; rewards</div>
+        <div class="reward-title">Best demos win.<br>Top teams get rewarded.</div>
+        <div class="reward-sub">The projects that deliver the most impact will be recognized in front of the team — and the top performers will be eligible for rewards to be announced at demo day.</div>
+      </div>
+      <div class="reward-trophy">🏆</div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-brand">AI Hackathon · Implementation Team</div>
+    <div class="footer-note">Questions? Reach out to your team lead.</div>
+  </footer>
+
+</div>
+</body>
+</html>
