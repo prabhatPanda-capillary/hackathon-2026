@@ -460,7 +460,7 @@
 <div class="success-overlay" id="successOverlay">
   <div class="success-icon">✓</div>
   <div class="success-title">You're in!</div>
-  <div class="success-sub">The Google Form has opened in a new tab — please complete and submit it there to save your entry. Demo week is <strong>June 2–6</strong>. Good luck!</div>
+  <div class="success-sub">Your project has been saved. Demo week is <strong>June 2–6</strong> — good luck!</div>
   <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:0.5rem;">
     <button class="success-pill" onclick="window.location.href='index.html'">Back to hackathon page</button>
     <button class="success-pill" style="background:transparent; border:1px solid rgba(13,13,13,0.25); color:var(--ink);" onclick="resetForm()">Submit another entry</button>
@@ -522,13 +522,7 @@
           <div class="field-group">
             <label for="email">Email address *</label>
             <input type="email" id="email" placeholder="you@company.com" required oninput="updateProgress()">
-          </div>
-          <div class="field-group">
-            <label for="partner">Partner name (if pair)</label>
-            <div class="field-hint">Leave blank if solo.</div>
-            <input type="text" id="partner" placeholder="Teammate's full name">
-          </div>
-        </div>
+          </div></div>
       </div>
     </div>
 
@@ -773,14 +767,38 @@
 
   // ---------------------------------------------------------------
   // GOOGLE FORM INTEGRATION
-  // Paste your Google Form URL below (the full https://forms.gle/... link)
   // ---------------------------------------------------------------
-  const GOOGLE_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSeiHFryKkyyYGIXPlU4pkmzohD_Z1Lkc2zy8sFnslJT_Kje2Q/viewform';
+  // GOOGLE FORM SILENT BACKGROUND SUBMISSION
+  // Data posts invisibly — form URL never exposed to user
+  //
+  // FINAL SETUP STEP — Get your entry IDs:
+  //   1. Open your Google Form in Chrome
+  //   2. Press Ctrl+U to view page source
+  //   3. Press Ctrl+F and search "entry."
+  //   4. Replace REPLACE_1 through REPLACE_15 below with those numbers
+  // ---------------------------------------------------------------
+  const FORM_SUBMIT_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSeiHFryKkyyYGIXPlU4pkmzohD_Z1Lkc2zy8sFnslJT_Kje2Q/formResponse';
+
+  const ENTRY = {
+    projectName:   'entry.129920249',
+    submitterName: 'entry.1159858321',
+    email:         'entry.1909786639',
+    tools:         'entry.1793024222',
+    otherTool:     'entry.607390851',
+    category:      'entry.1087329146',
+    problem:       'entry.1807854894',
+    solution:      'entry.148624829',
+    howItWorks:    'entry.505065217',
+    impact:        'entry.729704228',
+    impactScore:   'entry.18327462',
+    repoLink:      'entry.1292676916',
+    videoLink:     'entry.1930373781',
+    screenshots:   null,
+    extra:         null,
+  };
 
   function handleSubmit(e) {
     e.preventDefault();
-
-    // Validate required fields
     const required = ['projectName','submitterName','email','category','problem','solution','impact'];
     let valid = true;
     required.forEach(id => {
@@ -790,33 +808,40 @@
     });
     const tools = document.querySelectorAll('input[name="tools"]:checked');
     if (tools.length === 0) { valid = false; }
-    if (!valid) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
+    if (!valid) { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
 
-    // Show loading state briefly, then open Google Form in new tab
     document.getElementById('loadingOverlay').classList.add('show');
     document.getElementById('submitBtn').disabled = true;
 
-    // Store answers in sessionStorage so user sees what they filled
-    const summary = {
-      project: document.getElementById('projectName').value,
-      name: document.getElementById('submitterName').value,
-      email: document.getElementById('email').value,
-      partner: document.getElementById('partner').value || 'Solo',
-      tools: Array.from(tools).map(t => t.value).join(', '),
-      category: document.getElementById('category').value,
-    };
-    sessionStorage.setItem('hackSubmission', JSON.stringify(summary));
+    const fd = new FormData();
+    const add = (key, val) => { if (key) fd.append(key, val || ''); };
+    add(ENTRY.projectName,   document.getElementById('projectName').value);
+    add(ENTRY.submitterName, document.getElementById('submitterName').value);
+    add(ENTRY.email,         document.getElementById('email').value);
+    add(ENTRY.otherTool,     document.getElementById('otherTool').value);
+    add(ENTRY.category,      document.getElementById('category').value);
+    add(ENTRY.problem,       document.getElementById('problem').value);
+    add(ENTRY.solution,      document.getElementById('solution').value);
+    add(ENTRY.howItWorks,    document.getElementById('howItWorks').value);
+    add(ENTRY.impact,        document.getElementById('impact').value);
+    add(ENTRY.impactScore,   document.getElementById('impactSlider').value + ' / 10');
+    add(ENTRY.repoLink,      document.getElementById('repoLink').value);
+    add(ENTRY.videoLink,     document.getElementById('videoLink').value);
+    if (ENTRY.screenshots) add(ENTRY.screenshots, document.getElementById('screenshotNote').value);
+    if (ENTRY.extra)        add(ENTRY.extra,        document.getElementById('extra').value);
+    tools.forEach(t => fd.append(ENTRY.tools, t.value));
 
-    setTimeout(() => {
-      document.getElementById('loadingOverlay').classList.remove('show');
-      // Open the Google Form in a new tab
-      window.open(GOOGLE_FORM_URL, '_blank');
-      // Show success confirmation on this page
-      document.getElementById('successOverlay').classList.add('show');
-    }, 800);
+    fetch(FORM_SUBMIT_URL, { method: 'POST', mode: 'no-cors', body: fd })
+      .then(() => {
+        document.getElementById('loadingOverlay').classList.remove('show');
+        document.getElementById('successOverlay').classList.add('show');
+      })
+      .catch(() => {
+        document.getElementById('loadingOverlay').classList.remove('show');
+        document.getElementById('errorMsg').textContent = 'Network error — please check your connection and try again.';
+        document.getElementById('errorOverlay').classList.add('show');
+        document.getElementById('submitBtn').disabled = false;
+      });
   }
 
   function resetForm() {
