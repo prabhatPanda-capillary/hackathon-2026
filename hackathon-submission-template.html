@@ -437,16 +437,42 @@
     border: none;
     cursor: pointer;
   }
+
+  .spinner {
+    width: 44px; height: 44px;
+    border: 3px solid rgba(13,13,13,0.12);
+    border-top-color: var(--ink);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
 
+<!-- LOADING OVERLAY -->
+<div class="success-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="success-title" style="font-size:1.3rem; margin-top:1rem;">Submitting your project…</div>
+</div>
+
 <!-- SUCCESS OVERLAY -->
 <div class="success-overlay" id="successOverlay">
   <div class="success-icon">✓</div>
-  <div class="success-title">Submission received!</div>
-  <div class="success-sub">Your project has been submitted for the AI Hackathon. You'll hear from us ahead of demo week (June 2–6). Good luck!</div>
-  <button class="success-pill" onclick="document.getElementById('successOverlay').classList.remove('show')">Back to form</button>
+  <div class="success-title">You're in!</div>
+  <div class="success-sub">The Google Form has opened in a new tab — please complete and submit it there to save your entry. Demo week is <strong>June 2–6</strong>. Good luck!</div>
+  <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:0.5rem;">
+    <button class="success-pill" onclick="window.location.href='index.html'">Back to hackathon page</button>
+    <button class="success-pill" style="background:transparent; border:1px solid rgba(13,13,13,0.25); color:var(--ink);" onclick="resetForm()">Submit another entry</button>
+  </div>
+</div>
+
+<!-- ERROR OVERLAY -->
+<div class="success-overlay" id="errorOverlay">
+  <div class="success-icon" style="background:#fce8e8; color:#a32d2d;">✕</div>
+  <div class="success-title">Submission failed</div>
+  <div class="success-sub" id="errorMsg">Something went wrong. Please try again or email your submission directly to the organiser.</div>
+  <button class="success-pill" onclick="document.getElementById('errorOverlay').classList.remove('show')">Try again</button>
 </div>
 
 <div class="page">
@@ -745,8 +771,16 @@
     document.getElementById('progressText').textContent = filled + ' of 8 sections complete';
   }
 
+  // ---------------------------------------------------------------
+  // GOOGLE FORM INTEGRATION
+  // Paste your Google Form URL below (the full https://forms.gle/... link)
+  // ---------------------------------------------------------------
+  const GOOGLE_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSeiHFryKkyyYGIXPlU4pkmzohD_Z1Lkc2zy8sFnslJT_Kje2Q/viewform';
+
   function handleSubmit(e) {
     e.preventDefault();
+
+    // Validate required fields
     const required = ['projectName','submitterName','email','category','problem','solution','impact'];
     let valid = true;
     required.forEach(id => {
@@ -760,7 +794,47 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
-    document.getElementById('successOverlay').classList.add('show');
+
+    // Show loading state briefly, then open Google Form in new tab
+    document.getElementById('loadingOverlay').classList.add('show');
+    document.getElementById('submitBtn').disabled = true;
+
+    // Store answers in sessionStorage so user sees what they filled
+    const summary = {
+      project: document.getElementById('projectName').value,
+      name: document.getElementById('submitterName').value,
+      email: document.getElementById('email').value,
+      partner: document.getElementById('partner').value || 'Solo',
+      tools: Array.from(tools).map(t => t.value).join(', '),
+      category: document.getElementById('category').value,
+    };
+    sessionStorage.setItem('hackSubmission', JSON.stringify(summary));
+
+    setTimeout(() => {
+      document.getElementById('loadingOverlay').classList.remove('show');
+      // Open the Google Form in a new tab
+      window.open(GOOGLE_FORM_URL, '_blank');
+      // Show success confirmation on this page
+      document.getElementById('successOverlay').classList.add('show');
+    }, 800);
+  }
+
+  function resetForm() {
+    document.getElementById('hackForm').reset();
+    document.querySelectorAll('.tool-check-label').forEach(l => {
+      l.classList.remove('checked');
+      l.querySelector('.check-icon').textContent = '';
+    });
+    document.getElementById('otherToolWrap').style.display = 'none';
+    document.getElementById('sliderVal').textContent = '5 / 10';
+    document.getElementById('successOverlay').classList.remove('show');
+    document.getElementById('submitBtn').disabled = false;
+    ['problemCount','solutionCount','howCount','impactCount','screenshotCount','extraCount'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = '0 / ' + el.textContent.split('/ ')[1];
+    });
+    updateProgress();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   updateProgress();
