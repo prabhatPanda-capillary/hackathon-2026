@@ -768,16 +768,10 @@
   // ---------------------------------------------------------------
   // GOOGLE FORM INTEGRATION
   // ---------------------------------------------------------------
-  // GOOGLE FORM SILENT BACKGROUND SUBMISSION
-  // Data posts invisibly — form URL never exposed to user
-  //
-  // FINAL SETUP STEP — Get your entry IDs:
-  //   1. Open your Google Form in Chrome
-  //   2. Press Ctrl+U to view page source
-  //   3. Press Ctrl+F and search "entry."
-  //   4. Replace REPLACE_1 through REPLACE_15 below with those numbers
+  // GOOGLE APPS SCRIPT BACKEND
+  // Paste your deployed Web App URL below after running save_submission.gs
   // ---------------------------------------------------------------
-  const FORM_SUBMIT_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSeiHFryKkyyYGIXPlU4pkmzohD_Z1Lkc2zy8sFnslJT_Kje2Q/formResponse';
+  const FORM_SUBMIT_URL = 'https://script.google.com/a/macros/capillarytech.com/s/AKfycbwnG4wrvjy9dFiGS9pSiNP0A5w2xqfnmW-Mv94bMjRVSoHBnPXR2t31mzrSP8aPnnEG/exec';
 
   const ENTRY = {
     projectName:   'entry.129920249',
@@ -831,10 +825,36 @@
     if (ENTRY.extra)        add(ENTRY.extra,        document.getElementById('extra').value);
     tools.forEach(t => fd.append(ENTRY.tools, t.value));
 
-    fetch(FORM_SUBMIT_URL, { method: 'POST', mode: 'no-cors', body: fd })
-      .then(() => {
+    fetch(FORM_SUBMIT_URL, {
+      method: 'POST',
+      mode: 'cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        projectName:   document.getElementById('projectName').value,
+        submitterName: document.getElementById('submitterName').value,
+        email:         document.getElementById('email').value,
+        tools:         Array.from(tools).map(t => t.value).join(', '),
+        otherTool:     document.getElementById('otherTool').value,
+        category:      document.getElementById('category').value,
+        problem:       document.getElementById('problem').value,
+        solution:      document.getElementById('solution').value,
+        howItWorks:    document.getElementById('howItWorks').value,
+        impact:        document.getElementById('impact').value,
+        impactScore:   document.getElementById('impactSlider').value + ' / 10',
+        repoLink:      document.getElementById('repoLink').value,
+        videoLink:     document.getElementById('videoLink').value,
+        screenshots:   document.getElementById('screenshotNote').value,
+        extra:         document.getElementById('extra').value,
+      })
+    })
+      .then(res => res.json())
+      .then(data => {
         document.getElementById('loadingOverlay').classList.remove('show');
-        document.getElementById('successOverlay').classList.add('show');
+        if (data.status === 'success') {
+          document.getElementById('successOverlay').classList.add('show');
+        } else {
+          throw new Error(data.message || 'Submission failed');
+        }
       })
       .catch(() => {
         document.getElementById('loadingOverlay').classList.remove('show');
